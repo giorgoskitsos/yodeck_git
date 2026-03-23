@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git Basics</title>
+<style>
+:root{
+  --bg:#0a0f1d;--panel:#111827;--panel2:#020617;--muted:#9ca3af;--border:#243041;
+  --cyan:#22d3ee;--green:#4ade80;--yellow:#facc15;--orange:#fb923c;--red:#ef4444;--blue:#60a5fa;--purple:#a78bfa;--gray:#94a3b8;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top left,rgba(56,189,248,.16),transparent 26%),radial-gradient(circle at bottom right,rgba(250,204,21,.10),transparent 24%),var(--bg);color:#fff}
+.container{padding:20px;max-width:1400px;margin:0 auto}
+.header{margin-bottom:18px}
+.h1{font-size:40px;font-weight:800;margin:0 0 8px}
+.sub{color:var(--muted);max-width:780px;line-height:1.5}
+.nav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 20px}
+.nav button{padding:10px 14px;border-radius:12px;border:1px solid var(--border);cursor:pointer;background:#1e293b;color:#fff;font-size:14px}
+.nav button.active{background:#38bdf8;color:#000;border-color:#38bdf8}
+.layout{display:grid;grid-template-columns:420px 1fr;gap:20px}
+.box{background:rgba(17,24,39,.92);padding:18px;border-radius:18px;border:1px solid var(--border);box-shadow:0 14px 30px rgba(0,0,0,.25)}
+.kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#7c8ba1;margin-bottom:10px}
+.title{font-size:38px;font-weight:800;margin-bottom:8px}
+.desc{color:#d7dce3;line-height:1.5;margin-bottom:16px}
+.commandToggle{width:100%;text-align:left;background:#1f2937;color:#fff;border:1px solid var(--border);padding:12px 14px;border-radius:12px;cursor:pointer;margin-bottom:10px}
+.commandWrap{display:none}
+.commandWrap.open{display:block}
+.command{background:#03121d;border:1px solid #113246;color:#d2fff5;padding:12px 14px;border-radius:12px;font-family:monospace;font-size:14px;overflow:auto}
+.sectionTitle{font-size:15px;font-weight:700;margin:16px 0 10px}
+.list{display:grid;gap:10px}
+.listItem{background:#1f2937;border:1px solid #2e3a4d;border-radius:14px;padding:12px 14px;color:#d7dce3;line-height:1.45}
+.qa{margin-top:16px;background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.22);border-radius:16px;padding:14px}
+.qa strong{display:block;margin-bottom:8px;color:#d4fbff}
+.visual{background:rgba(17,24,39,.92);padding:18px;border-radius:18px;border:1px solid var(--border);box-shadow:0 14px 30px rgba(0,0,0,.25)}
+.visualTop{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px}
+.badge{padding:8px 12px;border-radius:999px;font-size:12px;font-weight:700;background:#38bdf8;color:#000}
+.timeline{position:relative;height:640px;background:#020617;border-radius:16px;border:1px solid #142033;overflow:hidden;padding:56px 20px 20px 20px}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);background-size:36px 36px;pointer-events:none}
+.diagram{position:relative;display:grid;grid-template-columns:330px 1fr;gap:18px;height:100%}
+.stack{display:grid;gap:18px}
+.zone{position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;min-height:138px}
+.zoneTitle{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8ea0b8;margin-bottom:8px}
+.zoneSub{font-size:12px;color:#78879b;line-height:1.45;margin-bottom:12px}
+.buffer{min-height:78px;border:1px dashed rgba(255,255,255,.14);border-radius:14px;padding:12px;display:grid;align-content:start;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;width:max-content;max-width:100%;padding:8px 10px;border-radius:999px;background:#0f172a;border:1px solid rgba(255,255,255,.08);font-size:12px;color:#e5e7eb;cursor:pointer;transition:.15s transform,.15s opacity,.15s box-shadow}
+.chip:hover,.chip.selected{transform:scale(1.04);box-shadow:0 0 0 2px rgba(255,255,255,.12),0 0 14px rgba(255,255,255,.12)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:0 0 auto}
+.historyWrap{display:grid;gap:18px}
+.zoneWide{position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;min-height:220px}
+.lanes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.lane{position:relative;min-height:220px;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px}
+.laneTitle{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8ea0b8;margin-bottom:10px}
+.line{position:absolute;left:22px;top:40px;bottom:14px;width:3px;border-radius:999px;background:rgba(255,255,255,.18)}
+.line.feature{background:rgba(167,139,250,.36)}
+.line.remote{background:rgba(250,204,21,.36)}
+.node{width:18px;height:18px;border-radius:50%;position:absolute;left:14px;border:3px solid #0b1220;box-shadow:0 0 0 2px rgba(255,255,255,.08);cursor:pointer;transition:.15s transform,.15s opacity,.15s box-shadow}
+.node:hover,.node.selected{transform:scale(1.14);box-shadow:0 0 0 3px rgba(255,255,255,.16),0 0 16px rgba(255,255,255,.18)}
+.node.ghost{opacity:.35;border-style:dashed;animation:ghost 1.1s ease-in-out infinite alternate}
+@keyframes ghost{from{opacity:.12;transform:scale(.96)}to{opacity:.42;transform:scale(1.04)}}
+.nodeLabel{position:absolute;font-size:12px;color:#d2dae4;background:rgba(15,23,42,.96);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:5px 8px;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;transform:translate(-50%,-50%);z-index:6}
+.nodeLabel.hidden{display:none}
+.arrowLayer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:2}
+.arrowPath{fill:none;stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 8px rgba(255,255,255,.12));transition:opacity .15s ease}
+.arrowPath.selected{filter:drop-shadow(0 0 10px rgba(255,255,255,.28))}
+.arrowLabel{position:absolute;font-size:12px;color:#d2dae4;background:rgba(15,23,42,.96);border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:5px 8px;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;transform:translate(-50%,-50%);z-index:6}
+.arrowLabel.selected{box-shadow:0 0 0 2px rgba(255,255,255,.12),0 0 16px rgba(255,255,255,.18)}
+.arrowPath.animated{animation:arrowPulse 1.1s ease-in-out infinite alternate}
+@keyframes arrowPulse{from{opacity:.45}to{opacity:1}}
+.head{position:absolute;padding:5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:#0f172a;font-size:11px;font-weight:700;letter-spacing:.08em;box-shadow:0 8px 20px rgba(0,0,0,.28)}
+.head::after{content:'';position:absolute;left:50%;bottom:-8px;width:10px;height:10px;background:#0f172a;border-right:1px solid rgba(255,255,255,.14);border-bottom:1px solid rgba(255,255,255,.14);transform:translateX(-50%) rotate(45deg)}
+.tooltip{display:none;position:absolute;z-index:8;padding:6px 10px;border-radius:999px;background:#0f172a;border:1px solid rgba(255,255,255,.08);font-size:11px;white-space:nowrap;color:#fff;pointer-events:none}
+.legend{position:absolute;right:18px;bottom:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:48%}
+.legendItem{padding:7px 10px;border-radius:999px;background:#0f172a;border:1px solid rgba(255,255,255,.08);font-size:11px;color:#c7d0dc}
+@media (max-width:1100px){.layout{grid-template-columns:1fr}.diagram{grid-template-columns:1fr}.lanes{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="h1">Git Basics</div>
+    
+  </div>
+
+  <div class="nav" id="nav"></div>
+
+  <div class="layout">
+    <div class="box">
+      <div class="kicker">Command Card</div>
+      <div class="title" id="title">git pull</div>
+      <div class="desc" id="desc"></div>
+      <button class="commandToggle" id="commandToggle">Show command <span id="toggleIcon">+</span></button>
+      <div class="commandWrap" id="commandWrap">
+        <div class="command" id="command"></div>
+      </div>
+      <div class="sectionTitle">What happens</div>
+      <div class="list" id="what"></div>
+      <div class="qa"><strong>QA context</strong><div id="qa"></div></div>
+    </div>
+
+    <div class="visual">
+      <div class="visualTop">
+        <div>
+          <div class="kicker">Visual Demo</div>
+          <div class="title" id="visualTitle">git pull</div>
+        </div>
+        <div class="badge" id="badge">Sync step</div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const steps=[
+  {id:'clone',title:'git clone',command:'git clone <repo-url>',desc:'Download a repository from remote to your local machine.',qa:'First step when you start working on a project.',what:['Step 1: Remote repo exists.','Step 2: Git downloads full history.','Step 3: You now have a local copy.'],badge:'Setup step',badgeColor:'#22d3ee',phases:3},
+  {id:'status',title:'git status',command:'git status',desc:'Show current state of working directory and staging area.',qa:'Use this constantly to understand what is changed, staged, or untracked.',what:['Step 1: Git scans your files.','Step 2: Shows modified and untracked files.'],badge:'Check step',badgeColor:'#38bdf8',phases:2},
+  {id:'fetch',title:'git fetch',command:'git fetch origin',desc:'Download changes from remote without merging.',qa:'Safe way to see what changed before pulling.',what:['Step 1: Remote has new commits.','Step 2: Git downloads them locally (no merge).','Step 3: Your local history is updated separately.'],badge:'Sync step',badgeColor:'#fb923c',phases:3},
+  {id:'pull',title:'git pull',command:'git pull origin main',desc:'Fetch and merge the latest changes from the remote to stay in sync.',qa:'Run this before testing so you work on the latest code.',what:['Step 1: Remote has a new commit.','Step 2: Git downloads that change.','Step 3: Your local history gets updated.'],badge:'Sync step',badgeColor:'#fb923c',phases:3},
+  {id:'add',title:'git add',command:'git add .',desc:'Move changes from working directory to staging area.',qa:'Use this to prepare exactly what will go into your next commit.',what:['Step 1: You have changes in working directory.','Step 2: Git moves them to staging area.','Step 3: They are ready to be committed.'],badge:'Stage step',badgeColor:'#22d3ee',phases:3},
+  {id:'commit',title:'git commit',command:'git commit -m "update tests"',desc:'Save staged changes as a new local commit.',qa:'Useful when you finished a meaningful test change and want a clean checkpoint.',what:['Step 1: You already have staged changes.','Step 2: Git creates a commit from them.','Step 3: The new commit appears in local history.'],badge:'Save step',badgeColor:'#4ade80',phases:3},
+  {id:'push',title:'git push',command:'git push origin main',desc:'Send local commits to the remote repository.',qa:'Use this when your local changes are ready to share with the team.',what:['Step 1: The commit exists locally.','Step 2: Git uploads it.','Step 3: The remote gets updated.'],badge:'Share step',badgeColor:'#facc15',phases:3},
+  {id:'stash',title:'git stash',command:'git stash',desc:'Temporarily store unfinished local changes.',qa:'Useful when you need to switch tasks quickly without committing half-done work.',what:['Step 1: You have unfinished local changes.','Step 2: Git saves them temporarily.','Step 3: Your working area becomes clean.'],badge:'Temp save',badgeColor:'#60a5fa',phases:3},
+  {id:'stash-pop',title:'git stash pop',command:'git stash pop',desc:'Restore stashed changes back to your working directory.',qa:'Useful when you want to continue work you temporarily saved.',what:['Step 1: A stash already exists.','Step 2: Git restores it.','Step 3: Changes are back in your working area.'],badge:'Restore step',badgeColor:'#34d399',phases:3},
+  {id:'reset-soft',title:'git reset --soft',command:'git reset --soft HEAD~1',desc:'Move HEAD back but keep the removed commit changes staged.',qa:'Useful when the last commit was wrong but you want to recommit the same work differently.',what:['Step 1: HEAD moves back.','Step 2: The last commit is removed from local history.','Step 3: Its changes stay in Staging.'],badge:'Soft undo',badgeColor:'#fbbf24',phases:3},
+  {id:'reset-hard',title:'git reset --hard',command:'git reset --hard HEAD~1',desc:'Move HEAD back and delete the removed commit changes completely.',qa:'Dangerous. Use only when you are sure you want to discard the work.',what:['Step 1: HEAD moves back.','Step 2: The last commit is removed.','Step 3: Its changes are deleted.'],badge:'Danger undo',badgeColor:'#ef4444',phases:3},
+  {id:'merge',title:'git merge',command:'git merge feature/login-tests',desc:'Combine a feature branch into your current branch.',qa:'Useful when a tested feature branch is ready to be joined into main.',what:['Step 1: Feature branch has its own work.','Step 2: Git combines that work into main.','Step 3: A merge commit appears in local history.'],badge:'Combine step',badgeColor:'#a78bfa',phases:3},
+  {id:'rebase',title:'git rebase',command:'git rebase main',desc:'Replay feature commits on top of the latest main branch.',qa:'Useful when you want a cleaner, linear history before opening a PR.',what:['Step 1: Feature commits exist on an older base.','Step 2: Git replays them on top of main.','Step 3: New rebased commits appear in local history.'],badge:'History step',badgeColor:'#f472b6',phases:3},
+  {id:'reflog',title:'git reflog',command:'git reflog',desc:'Show where HEAD pointed recently so you can recover work.',qa:'Very useful after reset, rebase, or other history-changing commands.',what:['Step 1: Reflog shows older HEAD positions.','Step 2: You can see where HEAD moved.','Step 3: You can recover a previous state.'],badge:'Recovery step',badgeColor:'#818cf8',phases:3}
+];
+
+let active=0;
+let selectedGroup=null;
+const tutorialPhaseByStep={};
+
+const nav=document.getElementById('nav');
+const titleEl=document.getElementById('title');
+const descEl=document.getElementById('desc');
+const commandEl=document.getElementById('command');
+const commandWrap=document.getElementById('commandWrap');
+const commandToggle=document.getElementById('commandToggle');
+const toggleIcon=document.getElementById('toggleIcon');
+const whatEl=document.getElementById('what');
+const qaEl=document.getElementById('qa');
+const visualTitle=document.getElementById('visualTitle');
+const badge=document.getElementById('badge');
+const timeline=document.getElementById('timeline');
+
+function buildNav(){
+  nav.innerHTML='';
+  steps.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.textContent=s.title;
+    b.className=i===active?'active':'';
+    b.onclick=()=>{active=i;selectedGroup=null;render();};
+    nav.appendChild(b);
+  });
+}
+
+function add(parent,tag,cls,styles,text){
+  const el=document.createElement(tag);
+  if(cls) el.className=cls;
+  if(styles) Object.assign(el.style,styles);
+  if(text!==undefined) el.textContent=text;
+  parent.appendChild(el);
+  return el;
+}
+
+function getPhase(step){
+  if(!(step.id in tutorialPhaseByStep)) tutorialPhaseByStep[step.id]=0;
+  return tutorialPhaseByStep[step.id];
+}
+
+function setPhase(step, value){
+  tutorialPhaseByStep[step.id]=Math.max(0, Math.min(step.phases-1, value));
+}
+
+function render(){
+  const step=steps[active];
+  buildNav();
+  titleEl.textContent=step.title;
+  descEl.textContent=step.desc;
+  commandEl.textContent=step.command;
+  qaEl.textContent=step.qa;
+  visualTitle.textContent=step.title;
+  badge.textContent=step.badge;
+  badge.style.background=step.badgeColor;
+  whatEl.innerHTML='';
+  step.what.forEach(t=>add(whatEl,'div','listItem',null,t));
+  renderTimeline(step);
+}
+
+function renderTimeline(step){
+  const placedLabels = [];
+  const placedNodeLabels = [];
+  const phase = getPhase(step);
+  timeline.innerHTML='';
+
+  const ctrl = add(timeline,'div','',{position:'absolute',right:'20px',top:'12px',zIndex:9,display:'flex',alignItems:'center',gap:'8px',background:'rgba(15,23,42,.88)',border:'1px solid rgba(255,255,255,.08)',borderRadius:'12px',padding:'8px 10px'});
+  add(ctrl,'div','',{fontSize:'12px',color:'#9ca3af',marginRight:'2px'},`Step ${phase+1} / ${step.phases}`);
+  const prevBtn = add(ctrl,'button','',{padding:'6px 10px',borderRadius:'8px',border:'1px solid #243041',background:'#1e293b',color:'#fff',cursor:'pointer'},'◀');
+  const nextBtn = add(ctrl,'button','',{padding:'6px 10px',borderRadius:'8px',border:'1px solid #243041',background:'#1e293b',color:'#fff',cursor:'pointer'},'▶');
+  prevBtn.onclick=()=>{setPhase(step, phase-1); render();};
+  nextBtn.onclick=()=>{setPhase(step, phase+1); render();};
+  const tip=add(timeline,'div','tooltip');
+  const arrowLayer=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  arrowLayer.setAttribute('class','arrowLayer');
+  arrowLayer.setAttribute('width','100%');
+  arrowLayer.setAttribute('height','100%');
+  arrowLayer.setAttribute('viewBox','0 0 1000 560');
+  arrowLayer.setAttribute('preserveAspectRatio','none');
+  timeline.appendChild(arrowLayer);
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  const marker=document.createElementNS('http://www.w3.org/2000/svg','marker');
+  marker.setAttribute('id','arrowhead');
+  marker.setAttribute('markerWidth','10');
+  marker.setAttribute('markerHeight','10');
+  marker.setAttribute('refX','8');
+  marker.setAttribute('refY','3');
+  marker.setAttribute('orient','auto');
+  const headPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+  headPath.setAttribute('d','M0,0 L0,6 L9,3 z');
+  headPath.setAttribute('fill','currentColor');
+  marker.appendChild(headPath);
+  defs.appendChild(marker);
+  arrowLayer.appendChild(defs);
+  const grid=add(timeline,'div','grid');
+  const diagram=add(timeline,'div','diagram');
+  const left=add(diagram,'div','stack');
+  const right=add(diagram,'div','historyWrap');
+
+  const workingZone=add(left,'div','zone');
+  add(workingZone,'div','zoneTitle',null,'Working Directory');
+  add(workingZone,'div','zoneSub',null,'Changed files live here before you stage or stash them.');
+  const workingBox=add(workingZone,'div','buffer');
+
+  const stagingZone=add(left,'div','zone');
+  add(stagingZone,'div','zoneTitle',null,'Staging Area');
+  add(stagingZone,'div','zoneSub',null,'This is not history. It is a temporary basket of changes ready to become a commit.');
+  const stagingBox=add(stagingZone,'div','buffer');
+
+  const localZone=add(right,'div','zoneWide');
+  add(localZone,'div','zoneTitle',null,'Local History');
+  add(localZone,'div','zoneSub',null,'Real commits live here.');
+  const lanes=add(localZone,'div','lanes');
+  const mainLane=makeLane(lanes,'main','');
+  const featureLane=makeLane(lanes,'feature','feature');
+
+  const remoteZone=add(right,'div','zoneWide');
+  add(remoteZone,'div','zoneTitle',null,'Remote');
+  add(remoteZone,'div','zoneSub',null,'Shared history on the server.');
+  const remoteLanes=add(remoteZone,'div','lanes', {gridTemplateColumns:'1fr'});
+  const remoteLane=makeLane(remoteLanes,'origin/main','remote');
+
+  const anchors={
+    working:{x:165,y:90},
+    staging:{x:165,y:260},
+    stash:{x:85,y:90},
+    main:{x:472,y:130},
+    feature:{x:625,y:130},
+    remote:{x:472,y:420}
+  };
+
+  baseHistory(mainLane,[26,78,130,182]);
+  baseRemote(remoteLane,[26,78]);
+
+  if(step.id==='clone'){
+    if(phase>=0){ laneNode(remoteLane,78,'var(--gray)','repo exists','clone'); }
+    if(phase>=1){ arrow(anchors.remote.x,anchors.remote.y-40,anchors.main.x,anchors.main.y,'var(--cyan)',true,'clone','download repo','right'); }
+    if(phase>=2){ laneNode(mainLane,26,'var(--cyan)','cloned repo','clone'); head(localZone,454,90,'HEAD'); }
+  }
+
+  if(step.id==='fetch'){
+    if(phase>=0){ laneNode(remoteLane,130,'var(--orange)','new remote commit','fetch'); }
+    if(phase>=1){ arrow(anchors.remote.x,anchors.remote.y,anchors.main.x,anchors.main.y+20,'var(--orange)',true,'fetch','download only','right'); }
+    if(phase>=2){ laneNode(mainLane,182,'var(--orange)','fetched (no merge)','fetch'); }
+  }
+
+  if(step.id==='pull'){
+    if(phase>=0){
+      laneNode(remoteLane,130,'var(--orange)','new remote commit','pull');
+    }
+    if(phase>=1){
+      arrow(anchors.remote.x,anchors.remote.y,anchors.main.x,anchors.main.y+110,'var(--orange)',true,'pull','download','right');
+    }
+    if(phase>=2){
+      laneNode(mainLane,234,'var(--orange)','merged locally','pull');
+      head(localZone,454,284,'HEAD');
+    }
+  }
+
+  if(step.id==='status'){
+    if(phase>=0){
+      chip(workingBox,'modified file','var(--blue)','status');
+    }
+    if(phase>=1){
+      chip(stagingBox,'staged file','var(--cyan)','status');
+    }
+  }
+
+  if(step.id==='add'){
+    if(phase>=0){
+      chip(workingBox,'modified file','var(--blue)','add');
+    }
+    if(phase>=1){
+      const wRect=workingBox.getBoundingClientRect();
+      const sRect=stagingBox.getBoundingClientRect();
+      const tRect=timeline.getBoundingClientRect();
+      const startX=wRect.left - tRect.left + wRect.width*0.7;
+      const startY=wRect.top - tRect.top + wRect.height*0.5;
+      const endX=sRect.left - tRect.left + sRect.width*0.3;
+      const endY=sRect.top - tRect.top + sRect.height*0.5;
+      arrow(startX,startY,endX,endY,'var(--cyan)',true,'add','add to staging','right');
+    }
+    if(phase>=2){
+      chip(stagingBox,'staged changes','var(--cyan)','add');
+    }
+  }
+
+  if(step.id==='commit'){
+    if(phase>=0){
+      chip(stagingBox,'staged changes','var(--cyan)','commit');
+    }
+    if(phase>=1){
+      arrow(anchors.staging.x+35,anchors.staging.y,anchors.main.x,anchors.main.y+110,'var(--green)',true,'commit','create commit','right');
+    }
+    if(phase>=2){
+      laneNode(mainLane,234,'var(--green)','new commit','commit');
+      head(localZone,454,284,'HEAD');
+    }
+  }
+
+  if(step.id==='push'){
+    if(phase>=0){
+      laneNode(mainLane,234,'var(--yellow)','local commit','push');
+    }
+    if(phase>=1){
+      arrow(anchors.main.x,anchors.main.y+110,anchors.remote.x,anchors.remote.y,'var(--yellow)',true,'push','upload','right');
+    }
+    if(phase>=2){
+      laneNode(remoteLane,130,'var(--yellow)','remote updated','push');
+      head(localZone,454,284,'HEAD');
+    }
+  }
+
+  if(step.id==='stash'){
+    const stashShelf = chip(workingZone,'stash shelf','var(--blue)','stash',{
+      position:'absolute',
+      left:'14px',
+      top:'62px'
+    });
+
+    if(phase>=0) chip(workingBox,'unfinished local changes','var(--blue)','stash');
+
+    if(phase>=1){
+      const sourceRect = workingBox.getBoundingClientRect();
+      const stashRect = stashShelf.getBoundingClientRect();
+      const timelineRect = timeline.getBoundingClientRect();
+
+      const startX = sourceRect.right - timelineRect.left - 6;
+      const startY = sourceRect.top - timelineRect.top + sourceRect.height * 0.5;
+
+      const endX = stashRect.left - timelineRect.left + stashRect.width / 2;
+      const endY = stashRect.top - timelineRect.top + stashRect.height / 2;
+
+      arrow(startX,startY,endX,endY,'var(--blue)',true,'stash','save to stash','left');
+    }
+
+    if(phase>=2){
+      stashShelf.style.opacity='1';
+      chip(workingBox,'working area clean','var(--gray)','stash');
+    } else {
+      stashShelf.style.opacity='0.88';
+    }
+  }
+
+  if(step.id==='stash-pop'){
+    const stashShelf = chip(workingZone,'stash shelf','var(--blue)','stash-pop',{
+      position:'absolute',
+      left:'14px',
+      top:'62px'
+    });
+
+    if(phase>=0) stashShelf.style.opacity='1';
+
+    if(phase>=1){
+      const stashRect = stashShelf.getBoundingClientRect();
+      const workingRect = workingBox.getBoundingClientRect();
+      const timelineRect = timeline.getBoundingClientRect();
+      const startX = stashRect.left - timelineRect.left + stashRect.width / 2;
+      const startY = stashRect.top - timelineRect.top + stashRect.height / 2;
+      const endX = workingRect.left - timelineRect.left + workingRect.width * 0.72;
+      const endY = workingRect.top - timelineRect.top + workingRect.height * 0.38;
+      arrow(startX,startY,endX,endY,'var(--blue)',true,'stash-pop','restore to working','right');
+    }
+
+    if(phase>=2){
+      chip(workingBox,'restored changes','var(--blue)','stash-pop');
+      stashShelf.style.opacity='0.4';
+    }
+  }
+
+  if(step.id==='reset-soft'){
+    if(phase>=0) laneNode(mainLane,182,'#fbbf24','HEAD moved back','reset-soft');
+    if(phase>=1){
+      laneNode(mainLane,234,'#334155','removed commit','reset-soft','ghost');
+      arrow(anchors.main.x,anchors.main.y+110,anchors.staging.x+35,anchors.staging.y,'var(--cyan)',true,'reset-soft','move changes back to staging','right');
+    }
+    if(phase>=2){
+      chip(stagingBox,'changes still staged','var(--cyan)','reset-soft');
+      head(localZone,454,232,'HEAD');
+    }
+  }
+
+  if(step.id==='reset-hard'){
+    if(phase>=0) laneNode(mainLane,182,'var(--red)','HEAD moved back','reset-hard');
+    if(phase>=1) laneNode(mainLane,234,'#334155','removed commit','reset-hard','ghost');
+    if(phase>=2) head(localZone,454,232,'HEAD');
+  }
+
+  if(step.id==='merge'){
+    if(phase>=0){
+      laneNode(featureLane,130,'var(--purple)','feature branch','merge');
+    }
+    if(phase>=1){
+      arrow(anchors.feature.x,anchors.feature.y,anchors.main.x,anchors.main.y+110,'var(--purple)',true,'merge','merge into main','top');
+    }
+    if(phase>=2){
+      laneNode(mainLane,234,'var(--purple)','merge commit','merge');
+      head(localZone,454,284,'HEAD');
+    }
+  }
+
+  if(step.id==='rebase'){
+    if(phase>=0){
+      laneNode(featureLane,78,'#f472b6','old commits','rebase');
+    }
+    if(phase>=1){
+      arrow(anchors.feature.x,anchors.feature.y-50,anchors.main.x,anchors.main.y+58,'#f472b6',true,'rebase','replay','top');
+    }
+    if(phase>=2){
+      laneNode(mainLane,182,'#f472b6','rebased commits','rebase');
+      head(localZone,454,284,'HEAD');
+    }
+  }
+
+  if(step.id==='reflog'){
+    if(phase>=0){
+      laneNode(mainLane,78,'#818cf8','HEAD@{2}','reflog');
+      laneNode(mainLane,130,'#818cf8','HEAD@{1}','reflog');
+    }
+    if(phase>=1){
+      laneNode(mainLane,182,'#818cf8','HEAD moved','reflog');
+      arrow(472,138,472,190,'#818cf8',true,'reflog','move back in time','right');
+    }
+    if(phase>=2){
+      laneNode(mainLane,234,'#818cf8','current HEAD','reflog');
+      laneNode(featureLane,130,'var(--purple)','recoverable lost commit','reflog','ghost');
+      arrow(472,190,472,242,'#818cf8',true,'reflog','recover state','left');
+      head(localZone,454,284,'HEAD');
+    }
+  }
+
+  const legend=add(timeline,'div','legend');
+  ['gray · history','cyan · staged changes','blue · stash / temporary changes','yellow · remote sync','purple · feature / recovery','green · new commit'].forEach(t=>add(legend,'div','legendItem',null,t));
+
+  highlight();
+
+  function makeLane(parent,title,lineCls){
+    const lane=add(parent,'div','lane');
+    add(lane,'div','laneTitle',null,title);
+    add(lane,'div','line '+lineCls);
+    return lane;
+  }
+
+  function baseHistory(lane,ys){ ys.forEach((y,i)=>laneNode(lane,y,'var(--gray)',i===1?'existing history':'','base')); }
+  function baseRemote(lane,ys){ ys.forEach((y,i)=>laneNode(lane,y,'#64748b',i===0?'shared history':'','base')); }
+
+  function laneNode(lane,y,color,text,group,extra){
+    const n=add(lane,'div','node'+(extra?' '+extra:''),{top:y+'px',background:color});
+    if(group) n.dataset.group=group;
+    if(text){
+      let labelX = 122;
+      let labelY = y + 7;
+      const width = Math.min(160, text.length * 7 + 20);
+      const height = 22;
+      let tries = 0;
+      while(tries < 10){
+        const overlap = placedNodeLabels.some(r =>
+          Math.abs(r.x - labelX) < (r.w/2 + width/2) &&
+          Math.abs(r.y - labelY) < (r.h/2 + height/2)
+        );
+        if(!overlap) break;
+        labelY += 26;
+        tries++;
+      }
+      placedNodeLabels.push({x:labelX,y:labelY,w:width,h:height});
+      const lab=add(lane,'div','nodeLabel',{left:labelX+'px',top:labelY+'px'},text);
+      if(group) lab.dataset.group=group;
+    }
+    n.onmouseenter=()=>showTip(text||step.title,lane.getBoundingClientRect().left - timeline.getBoundingClientRect().left + 48,y+8);
+    n.onmouseleave=hideTip;
+    n.onclick=()=>{selectedGroup=group||null;highlight();};
+    return n;
+  }
+
+  function chip(parent,text,color,group,styles){
+    const c=add(parent,'div','chip');
+    if(group) c.dataset.group=group;
+    if(styles) Object.assign(c.style, styles);
+    add(c,'span','dot',{background:color});
+    add(c,'span','',null,text);
+    c.onmouseenter=()=>showTip(text,parent.getBoundingClientRect().left - timeline.getBoundingClientRect().left + 12,parent.getBoundingClientRect().top - timeline.getBoundingClientRect().top - 8);
+    c.onmouseleave=hideTip;
+    c.onclick=()=>{selectedGroup=group||null;highlight();};
+    return c;
+  }
+
+  function arrow(x1,y1,x2,y2,color,animated,group,labelText,labelSide){
+    // 👉 choose routing side (right by default, left for stash-like flows)
+    const offset = (labelSide==='left' || labelSide==='top') ? -140 : 140;
+
+    // route: go side → vertical → to target
+    const p1x = x1 + offset;
+    const p1y = y1;
+
+    const p2x = x1 + offset;
+    const p2y = y2;
+
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+
+    const d = `M ${x1} ${y1}
+               C ${p1x} ${p1y}, ${p1x} ${p2y}, ${p2x} ${p2y}
+               S ${x2} ${y2}, ${x2} ${y2}`;
+
+    path.setAttribute('d',d);
+    path.setAttribute('class','arrowPath'+(animated?' animated':''));
+    path.setAttribute('stroke',color);
+    path.setAttribute('color',color);
+    path.setAttribute('marker-end','url(#arrowhead)');
+
+    if(group) path.dataset.group=group;
+    arrowLayer.appendChild(path);
+
+    if(labelText){
+      const midX = p1x + (offset>0 ? 20 : -20);
+      const midY = (y1 + y2)/2;
+
+      const lab = add(timeline,'div','arrowLabel',{
+        left:midX+'px',
+        top:midY+'px'
+      },labelText);
+
+      if(group) lab.dataset.group=group;
+      return {path, lab};
+    }
+
+    return {path};
+  }
+
+  function head(parent,x,y,text){ add(parent,'div','head',{left:x+'px',top:y+'px'},text); }
+
+  function showTip(text,x,y){ tip.textContent=text; tip.style.left=x+'px'; tip.style.top=y+'px'; tip.style.display='block'; }
+  function hideTip(){ tip.style.display='none'; }
+  function highlight(){
+    const items=timeline.querySelectorAll('[data-group]');
+    items.forEach(el=>{
+      const on=selectedGroup && el.dataset.group===selectedGroup;
+      el.classList.toggle('selected',!!on);
+      el.style.opacity=selectedGroup?(on?'1':'0.25'):'';
+    });
+  }
+}
+
+commandToggle.onclick=()=>{
+  const open=commandWrap.classList.toggle('open');
+  toggleIcon.textContent=open?'-':'+';
+};
+
+render();
+</script>
+</body>
+</html>
